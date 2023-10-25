@@ -18,18 +18,20 @@ public:
     }
 
     Block& operator=(Block&& other) {
-        delete[] content_;
+        if (this != &other) {
+            delete[] content_;
 
-        content_ = other.content_;
-        size_ = other.size_;
+            content_ = other.content_;
+            size_ = other.size_;
 
-        start_ = other.start_;
-        end_ = other.end_;
+            start_ = other.start_;
+            end_ = other.end_;
 
-        first_elem_ = other.first_elem_;
-        last_elem_ = other.last_elem_;
+            first_elem_ = other.first_elem_;
+            last_elem_ = other.last_elem_;
 
-        other.content_ = nullptr;
+            other.content_ = nullptr;
+        }
 
         return *this;
     }
@@ -82,14 +84,6 @@ public:
         --size_;
     }
 
-    bool CanPushBack() {
-        return size_ == 0 || last_elem_ != end_;
-    }
-
-    bool CanPushFront() {
-        return size_ == 0 || first_elem_ != start_;
-    }
-
     size_t Size() const {
         return size_;
     }
@@ -102,7 +96,24 @@ public:
         return *(first_elem_ + ind);
     }
 
+    bool IsEmpty() {
+        return size_ == 0;
+    }
+
+private:
+    bool CanPushBack() {
+        return size_ == 0 || last_elem_ != end_;
+    }
+
+    bool CanPushFront() {
+        return size_ == 0 || first_elem_ != start_;
+    }
+
     void Copy(const Block& rhs) {
+        if (this == &rhs) {
+            return;
+        }
+
         delete[] content_;
 
         size_ = rhs.size_;
@@ -117,10 +128,6 @@ public:
 
         first_elem_ = start_ + (rhs.first_elem_ - rhs.start_);
         last_elem_ = start_ + (rhs.last_elem_ - rhs.start_);
-    }
-
-    bool IsEmpty() {
-        return size_ == 0;
     }
 
 private:
@@ -193,19 +200,6 @@ public:
         delete[] content_;
         Copy(rhs);
         return *this;
-    }
-
-    void Copy(const Deque& rhs) {
-        content_ = new Block<T>[rhs.block_cnt_];
-        block_cnt_ = rhs.block_cnt_;
-        size_ = rhs.size_;
-
-        first_elem_ = content_ + (rhs.first_elem_ - rhs.content_);
-        last_elem_ = content_ + (rhs.last_elem_ - rhs.content_);
-
-        for (size_t i = 0; i < block_cnt_; ++i) {
-            content_[i].Copy(rhs.content_[i]);
-        }
     }
 
     Deque& operator=(Deque&& rhs) {
@@ -328,6 +322,24 @@ public:
         size_ = 0;
         first_elem_ = content_;
         last_elem_ = content_;
+    }
+
+private:
+    void Copy(const Deque& rhs) {
+        if (this == &rhs) {
+            return;
+        }
+        
+        content_ = new Block<T>[rhs.block_cnt_];
+        block_cnt_ = rhs.block_cnt_;
+        size_ = rhs.size_;
+
+        first_elem_ = content_ + (rhs.first_elem_ - rhs.content_);
+        last_elem_ = content_ + (rhs.last_elem_ - rhs.content_);
+
+        for (size_t i = 0; i < block_cnt_; ++i) {
+            content_[i].Copy(rhs.content_[i]);
+        }
     }
 
     void Extend() {
